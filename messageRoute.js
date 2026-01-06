@@ -1,24 +1,17 @@
 import express from 'express';
-import { verifiedUsers } from './authRoute.js';
 import { decodeMessageService } from './services.js';
+import { requireAuthMiddleware } from './requireAuth.js';
 
 const router = express.Router();
+router.use(requireAuthMiddleware)
 
 
 router.post('/decode-message', (req, res) => {
-    if (!req.body) {
-        return res.status(400).send("request body is required")
+    if (!req.body.message) {
+        return res.status(400).send("Message is required in request body.")
     }
 
-    if (!req.body.username || !req.body.message) {
-        return res.status(400).send("username and message is required in request body.")
-    }
-
-    const { username, message } = req.body;
-    if (!username in verifiedUsers || !verifiedUsers[username]) {
-        return res.status(401).send("Unauthorized user")
-    }
-
+    const { message } = req.body;
     const response = decodeMessageService(message)
 
     if (response == -1) {

@@ -1,10 +1,10 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import { signupService, verifyService } from './services.js';
 import { getSupabaseClient } from './supabase.js';
 
 const supabase = getSupabaseClient();
 const router = express.Router();
-export const verifiedUsers = {};
 
 
 router.post('/signup', async (req, res) => {
@@ -78,8 +78,23 @@ router.post('/verify', async (req, res) => {
             return res.status(401).send("Unauthorized");
         }
 
-        verifiedUsers[username] = true
-        res.status(200).send("Verified");
+        const SECRET = process.env.JWT_SECRET;
+        const EXPIRES_IN = process.env.JWT_EXPIRES_IN;
+        const token = jwt.sign(
+            {
+                username: data.username,
+                id: data.id
+            },
+            SECRET,
+            {
+                expiresIn: EXPIRES_IN
+            }
+        )
+
+        res.status(200).json({
+            status: "Verified",
+            token: token
+        });
 
     } catch (error) {
         console.log(error);
